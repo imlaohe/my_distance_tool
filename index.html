@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#060b14">
+    <meta name="theme-color" content="#F1F5F9">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="三维测距">
@@ -12,25 +12,137 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="manifest" href="manifest.json">
     <title>三维测距工具</title>
+    <script>
+        // 提前应用已保存的配色，避免首屏闪烁
+        (function () {
+            try {
+                var t = localStorage.getItem('rangingTheme_v1');
+                if (t) document.documentElement.setAttribute('data-theme', t);
+            } catch (e) { }
+        })();
+    </script>
     <style>
-        :root {
-            --bg: #060b14;
-            --surface: rgba(12, 20, 40, 0.85);
-            --card-bg: rgba(14, 24, 48, 0.75);
-            --border: rgba(56, 189, 248, 0.18);
-            --border-bright: rgba(56, 189, 248, 0.45);
-            --text: #e0f0ff;
-            --text-dim: #5c7a9a;
-            --accent: #00e5ff;
-            --accent2: #7c4dff;
-            --accent3: #00e676;
-            --accent-glow: rgba(0, 229, 255, 0.35);
-            --accent-glow2: rgba(124, 77, 255, 0.35);
-            --danger: #ff3d71;
-            --danger-glow: rgba(255, 61, 113, 0.4);
-            --input-bg: rgba(8, 16, 32, 0.7);
+                :root {
+            /* ===== 配色：户外强光（浅色，默认）===== */
+            --bg: #F1F5F9;
+            --surface: rgba(255, 255, 255, 0.92);
+            --card-bg: rgba(255, 255, 255, 0.88);
+            --border-rgb: 100, 116, 139;
+            --border: rgba(var(--border-rgb), 0.25);
+            --border-bright: rgba(var(--border-rgb), 0.55);
+            --text: #0F172A;
+            --text-dim: #64748B;
+            --accent: #0D9488;
+            --accent-rgb: 13, 148, 136;
+            --accent2: #6D28D9;
+            --accent2-rgb: 109, 40, 217;
+            --accent3: #059669;
+            --accent3-rgb: 5, 150, 105;
+            --accent-glow: rgba(var(--accent-rgb), 0.35);
+            --accent-glow2: rgba(var(--accent2-rgb), 0.35);
+            --danger: #DC2626;
+            --danger-rgb: 220, 38, 38;
+            --danger-glow: rgba(var(--danger-rgb), 0.4);
+            --warn: #B45309;
+            --warn-rgb: 180, 83, 9;
+            --highlight-rgb: 15, 23, 42;
+            --placeholder: rgba(100, 116, 139, 0.55);
+            --input-bg: rgba(241, 245, 249, 0.9);
+            --input-focus-bg: #FFFFFF;
+            --shadow-color: rgba(15, 23, 42, 0.12);
+            --shadow-color-sm: rgba(15, 23, 42, 0.08);
+            --title-1: #0F172A;
+            --title-2: #0D9488;
+            --title-3: #6D28D9;
             --radius: 12px;
             --font-mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace;
+        }
+
+        /* ===== 配色：纯黑省电（OLED）===== */
+        html[data-theme="oled"] {
+            --bg: #000000;
+            --surface: rgba(18, 18, 18, 0.92);
+            --card-bg: rgba(18, 18, 18, 0.88);
+            --border-rgb: 150, 150, 150;
+            --text: #E8E8E8;
+            --text-dim: #8A8A8A;
+            --accent: #35E08A;
+            --accent-rgb: 53, 224, 138;
+            --accent2: #818CF8;
+            --accent2-rgb: 129, 140, 248;
+            --accent3: #35E08A;
+            --accent3-rgb: 53, 224, 138;
+            --danger: #F87171;
+            --danger-rgb: 248, 113, 113;
+            --warn: #FBBF24;
+            --warn-rgb: 251, 191, 36;
+            --highlight-rgb: 255, 255, 255;
+            --placeholder: rgba(138, 138, 138, 0.7);
+            --input-bg: rgba(24, 24, 24, 0.95);
+            --input-focus-bg: #141414;
+            --shadow-color: rgba(0, 0, 0, 0.6);
+            --shadow-color-sm: rgba(0, 0, 0, 0.45);
+            --title-1: #E8E8E8;
+            --title-2: #35E08A;
+            --title-3: #818CF8;
+        }
+
+        /* ===== 配色：暖夜护眼 ===== */
+        html[data-theme="warm"] {
+            --bg: #1A1614;
+            --surface: rgba(40, 34, 27, 0.92);
+            --card-bg: rgba(40, 34, 27, 0.88);
+            --border-rgb: 168, 155, 136;
+            --text: #F0E6D8;
+            --text-dim: #A89B88;
+            --accent: #FFB74D;
+            --accent-rgb: 255, 183, 77;
+            --accent2: #E57373;
+            --accent2-rgb: 229, 115, 115;
+            --accent3: #A5D6A7;
+            --accent3-rgb: 165, 214, 167;
+            --danger: #EF5350;
+            --danger-rgb: 239, 83, 80;
+            --warn: #FFB74D;
+            --warn-rgb: 255, 183, 77;
+            --highlight-rgb: 255, 255, 255;
+            --placeholder: rgba(168, 155, 136, 0.7);
+            --input-bg: rgba(31, 27, 22, 0.95);
+            --input-focus-bg: #241F19;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --shadow-color-sm: rgba(0, 0, 0, 0.38);
+            --title-1: #F0E6D8;
+            --title-2: #FFB74D;
+            --title-3: #E57373;
+        }
+
+        /* ===== 配色：专业深蓝 ===== */
+        html[data-theme="pro"] {
+            --bg: #0F172A;
+            --surface: rgba(30, 41, 59, 0.92);
+            --card-bg: rgba(30, 41, 59, 0.88);
+            --border-rgb: 148, 163, 184;
+            --text: #F1F5F9;
+            --text-dim: #94A3B8;
+            --accent: #38BDF8;
+            --accent-rgb: 56, 189, 248;
+            --accent2: #A78BFA;
+            --accent2-rgb: 167, 139, 250;
+            --accent3: #34D399;
+            --accent3-rgb: 52, 211, 153;
+            --danger: #FB7185;
+            --danger-rgb: 251, 113, 133;
+            --warn: #FBBF24;
+            --warn-rgb: 251, 191, 36;
+            --highlight-rgb: 255, 255, 255;
+            --placeholder: rgba(148, 163, 184, 0.7);
+            --input-bg: rgba(15, 23, 42, 0.95);
+            --input-focus-bg: #16233B;
+            --shadow-color: rgba(0, 0, 0, 0.45);
+            --shadow-color-sm: rgba(0, 0, 0, 0.35);
+            --title-1: #F1F5F9;
+            --title-2: #38BDF8;
+            --title-3: #A78BFA;
         }
 
         * {
@@ -63,12 +175,12 @@
             pointer-events: none;
             background:
                 /* 主网格线 */
-                repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0, 229, 255, 0.03) 39px, rgba(0, 229, 255, 0.03) 40px),
-                repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0, 229, 255, 0.03) 39px, rgba(0, 229, 255, 0.03) 40px),
+                repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(var(--accent-rgb), 0.03) 39px, rgba(var(--accent-rgb), 0.03) 40px),
+                repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(var(--accent-rgb), 0.03) 39px, rgba(var(--accent-rgb), 0.03) 40px),
                 /* 光晕 */
-                radial-gradient(ellipse at 30% 15%, rgba(0, 229, 255, 0.07) 0%, transparent 55%),
-                radial-gradient(ellipse at 75% 70%, rgba(124, 77, 255, 0.06) 0%, transparent 55%),
-                radial-gradient(ellipse at 50% 85%, rgba(0, 230, 118, 0.04) 0%, transparent 50%);
+                radial-gradient(ellipse at 30% 15%, rgba(var(--accent-rgb), 0.07) 0%, transparent 55%),
+                radial-gradient(ellipse at 75% 70%, rgba(var(--accent2-rgb), 0.06) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 85%, rgba(var(--accent3-rgb), 0.04) 0%, transparent 50%);
         }
 
         .container {
@@ -80,9 +192,31 @@
 
         /* ===== 头部 ===== */
         .header {
+            position: relative;
             text-align: center;
             margin-bottom: 20px;
             padding-top: 12px;
+        }
+
+        .theme-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .theme-btn:active {
+            transform: scale(0.92);
+            border-color: var(--border-bright);
         }
 
         .header .icon {
@@ -92,9 +226,9 @@
             width: 60px;
             height: 60px;
             border-radius: 18px;
-            background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(124, 77, 255, 0.15));
+            background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.15), rgba(var(--accent2-rgb), 0.15));
             border: 1px solid var(--border-bright);
-            box-shadow: 0 0 40px rgba(0, 229, 255, 0.2), inset 0 0 20px rgba(0, 229, 255, 0.05);
+            box-shadow: 0 0 40px rgba(var(--accent-rgb), 0.2), inset 0 0 20px rgba(var(--accent-rgb), 0.05);
             margin-bottom: 14px;
             font-size: 26px;
             backdrop-filter: blur(10px);
@@ -105,7 +239,7 @@
             font-size: 22px;
             font-weight: 700;
             letter-spacing: 2px;
-            background: linear-gradient(135deg, #e0f0ff 0%, #80d8ff 50%, #b388ff 100%);
+            background: linear-gradient(135deg, var(--title-1) 0%, var(--title-2) 50%, var(--title-3) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -121,9 +255,9 @@
 
         /* ===== 环境警示条（本地文件 / HTTP 打开时提示） ===== */
         .env-warn {
-            background: rgba(255, 179, 0, 0.12);
-            border: 1px solid rgba(255, 179, 0, 0.45);
-            color: #ffb300;
+            background: rgba(var(--warn-rgb), 0.12);
+            border: 1px solid rgba(var(--warn-rgb), 0.45);
+            color: var(--warn);
             border-radius: var(--radius);
             padding: 12px 14px;
             font-size: 11px;
@@ -144,7 +278,7 @@
             gap: 2px;
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 20px var(--shadow-color-sm);
         }
 
         .format-btn {
@@ -166,10 +300,10 @@
         }
 
         .format-btn.active {
-            background: rgba(0, 229, 255, 0.12);
+            background: rgba(var(--accent-rgb), 0.12);
             color: var(--accent);
-            box-shadow: 0 0 16px rgba(0, 229, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(0, 229, 255, 0.3);
+            box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.2), inset 0 1px 0 rgba(var(--highlight-rgb), 0.05);
+            border: 1px solid rgba(var(--accent-rgb), 0.3);
         }
 
         /* ===== 预览行 ===== */
@@ -197,7 +331,7 @@
             margin-bottom: 16px;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 32px var(--shadow-color);
             transition: border-color 0.35s, box-shadow 0.35s;
             position: relative;
             overflow: hidden;
@@ -211,13 +345,13 @@
             left: 10%;
             right: 10%;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.35), transparent);
+            background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb), 0.35), transparent);
             pointer-events: none;
         }
 
         .point-card:focus-within {
             border-color: var(--border-bright);
-            box-shadow: 0 8px 40px rgba(0, 229, 255, 0.1), 0 0 0 1px rgba(0, 229, 255, 0.1);
+            box-shadow: 0 8px 40px rgba(var(--accent-rgb), 0.1), 0 0 0 1px rgba(var(--accent-rgb), 0.1);
         }
 
         .point-label {
@@ -256,7 +390,7 @@
 
         .point-a .point-dot {
             background: var(--accent3);
-            box-shadow: 0 0 12px rgba(0, 230, 118, 0.6);
+            box-shadow: 0 0 12px rgba(var(--accent3-rgb), 0.6);
             color: var(--accent3);
         }
 
@@ -287,7 +421,7 @@
 
         .locate-btn:active {
             border-color: var(--border-bright);
-            background: rgba(0, 229, 255, 0.12);
+            background: rgba(var(--accent-rgb), 0.12);
         }
 
         .locate-btn:disabled {
@@ -351,12 +485,12 @@
 
         .input-group input:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.15), 0 0 20px rgba(0, 229, 255, 0.08);
-            background: rgba(8, 20, 40, 0.9);
+            box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15), 0 0 20px rgba(var(--accent-rgb), 0.08);
+            background: var(--input-focus-bg);
         }
 
         .input-group input::placeholder {
-            color: rgba(90, 120, 150, 0.5);
+            color: var(--placeholder);
         }
 
         .input-group .unit {
@@ -393,7 +527,7 @@
 
         .dir-group select:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
         }
 
         /* DMS 符号 */
@@ -466,18 +600,18 @@
         }
 
         .btn-calc {
-            background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(124, 77, 255, 0.2));
+            background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.2), rgba(var(--accent2-rgb), 0.2));
             color: var(--accent);
-            border: 1px solid rgba(0, 229, 255, 0.35);
-            box-shadow: 0 0 24px rgba(0, 229, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(var(--accent-rgb), 0.35);
+            box-shadow: 0 0 24px rgba(var(--accent-rgb), 0.15), inset 0 1px 0 rgba(var(--highlight-rgb), 0.05);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
         }
 
         .btn-calc:active {
             transform: scale(0.96);
-            box-shadow: 0 0 40px rgba(0, 229, 255, 0.3);
-            background: linear-gradient(135deg, rgba(0, 229, 255, 0.3), rgba(124, 77, 255, 0.3));
+            box-shadow: 0 0 40px rgba(var(--accent-rgb), 0.3);
+            background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.3), rgba(var(--accent2-rgb), 0.3));
         }
 
         .btn-clear {
@@ -489,7 +623,7 @@
         }
 
         .btn-clear:active {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(var(--highlight-rgb), 0.05);
             border-color: var(--border-bright);
         }
 
@@ -502,7 +636,7 @@
             padding: 20px;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 32px var(--shadow-color);
             display: none;
             position: relative;
             overflow: hidden;
@@ -515,7 +649,7 @@
             left: 10%;
             right: 10%;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0, 230, 118, 0.4), transparent);
+            background: linear-gradient(90deg, transparent, rgba(var(--accent3-rgb), 0.4), transparent);
             pointer-events: none;
         }
 
@@ -554,7 +688,7 @@
             line-height: 1.1;
             letter-spacing: -1px;
             text-shadow: none;
-            filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.3));
+            filter: drop-shadow(0 0 12px rgba(var(--accent-rgb), 0.3));
         }
 
         .result-unit {
@@ -590,7 +724,7 @@
             left: 15%;
             right: 15%;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb), 0.2), transparent);
         }
 
         .detail-value {
@@ -619,8 +753,8 @@
             top: calc(24px + env(safe-area-inset-top));
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(255, 61, 113, 0.2);
-            border: 1px solid rgba(255, 61, 113, 0.4);
+            background: rgba(var(--danger-rgb), 0.2);
+            border: 1px solid rgba(var(--danger-rgb), 0.4);
             color: var(--danger);
             padding: 12px 24px;
             border-radius: 8px;
@@ -668,7 +802,7 @@
         .copy-result-btn:active {
             color: var(--accent);
             border-color: var(--border-bright);
-            background: rgba(0, 229, 255, 0.08);
+            background: rgba(var(--accent-rgb), 0.08);
         }
 
         /* ===== 统计面板 ===== */
@@ -698,7 +832,7 @@
             left: 20%;
             right: 20%;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb), 0.3), transparent);
         }
 
         .stat-value {
@@ -747,9 +881,9 @@
 
         .history-count {
             font-size: 10px;
-            background: rgba(0, 229, 255, 0.12);
+            background: rgba(var(--accent-rgb), 0.12);
             color: var(--accent);
-            border: 1px solid rgba(0, 229, 255, 0.25);
+            border: 1px solid rgba(var(--accent-rgb), 0.25);
             border-radius: 20px;
             padding: 1px 8px;
             font-family: var(--font-mono);
@@ -780,13 +914,13 @@
         .mini-btn:active {
             color: var(--accent);
             border-color: var(--border-bright);
-            background: rgba(0, 229, 255, 0.08);
+            background: rgba(var(--accent-rgb), 0.08);
         }
 
         .mini-btn-danger:active {
             color: var(--danger);
-            border-color: rgba(255, 61, 113, 0.4);
-            background: rgba(255, 61, 113, 0.08);
+            border-color: rgba(var(--danger-rgb), 0.4);
+            background: rgba(var(--danger-rgb), 0.08);
         }
 
         .history-list {
@@ -794,7 +928,7 @@
             overflow-y: auto;
             padding-right: 2px;
             scrollbar-width: thin;
-            scrollbar-color: rgba(0, 229, 255, 0.2) transparent;
+            scrollbar-color: rgba(var(--accent-rgb), 0.2) transparent;
         }
 
         .history-list::-webkit-scrollbar {
@@ -802,7 +936,7 @@
         }
 
         .history-list::-webkit-scrollbar-thumb {
-            background: rgba(0, 229, 255, 0.2);
+            background: rgba(var(--accent-rgb), 0.2);
             border-radius: 2px;
         }
 
@@ -925,6 +1059,7 @@
     <div class="container">
         <!-- 头部 -->
         <div class="header">
+            <button class="theme-btn" id="themeBtn" onclick="cycleTheme()" title="切换配色">☀️</button>
             <div class="icon">📏</div>
             <h1>三维测距工具</h1>
             <p>基于经纬度 + 海拔的直线距离计算</p>
@@ -1290,10 +1425,10 @@
         function showToast(msg, ok) {
             const t = document.getElementById('toast');
             t.textContent = msg;
-            t.style.borderColor = ok ? 'rgba(0, 230, 118, 0.4)' : 'rgba(255, 61, 113, 0.4)';
-            t.style.background = ok ? 'rgba(0, 230, 118, 0.15)' : 'rgba(255, 61, 113, 0.2)';
+            t.style.borderColor = ok ? 'rgba(var(--accent3-rgb), 0.4)' : 'rgba(var(--danger-rgb), 0.4)';
+            t.style.background = ok ? 'rgba(var(--accent3-rgb), 0.15)' : 'rgba(var(--danger-rgb), 0.2)';
             t.style.color = ok ? 'var(--accent3)' : 'var(--danger)';
-            t.style.boxShadow = ok ? '0 4px 24px rgba(0, 230, 118, 0.25)' : '0 4px 24px var(--danger-glow)';
+            t.style.boxShadow = ok ? '0 4px 24px rgba(var(--accent3-rgb), 0.25)' : '0 4px 24px var(--danger-glow)';
             t.classList.add('show');
             clearTimeout(t._timeout);
             t._timeout = setTimeout(() => t.classList.remove('show'), 2500);
@@ -2185,12 +2320,48 @@
             });
         });
 
+        /* ====== 配色主题 ====== */
+
+        const THEME_KEY = 'rangingTheme_v1';
+        const THEMES = [
+            { id: 'outdoor', icon: '☀️', label: '户外强光', color: '#F1F5F9' },
+            { id: 'oled', icon: '⚡', label: '纯黑省电', color: '#000000' },
+            { id: 'warm', icon: '🌙', label: '暖夜护眼', color: '#1A1614' },
+            { id: 'pro', icon: '📐', label: '专业深蓝', color: '#0F172A' },
+        ];
+
+        function applyTheme(id) {
+            const t = THEMES.find(x => x.id === id) || THEMES[0];
+            document.documentElement.setAttribute('data-theme', t.id);
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', t.color);
+            const btn = document.getElementById('themeBtn');
+            if (btn) {
+                btn.textContent = t.icon;
+                btn.title = '配色：' + t.label + '（点击切换）';
+            }
+            try { localStorage.setItem(THEME_KEY, t.id); } catch (e) { }
+        }
+
+        function cycleTheme() {
+            const cur = document.documentElement.getAttribute('data-theme') || 'outdoor';
+            const idx = THEMES.findIndex(x => x.id === cur);
+            const next = THEMES[((idx < 0 ? 0 : idx) + 1) % THEMES.length];
+            applyTheme(next.id);
+            showToast('配色：' + next.label, true);
+        }
+
         /* ====== 初始化 ====== */
 
         document.getElementById('importFile').addEventListener('change', importHistory);
         renderHistory();
         renderStats();
         renderPlaces();
+
+        // 应用已保存的配色（同时同步状态栏颜色与按钮图标）
+        let savedTheme = '';
+        try { savedTheme = localStorage.getItem(THEME_KEY) || ''; } catch (e) { }
+        applyTheme(savedTheme || 'outdoor');
 
         // 环境提醒：本地文件 / HTTP 打开时，定位与数据保存都会受限
         (function checkEnv() {
