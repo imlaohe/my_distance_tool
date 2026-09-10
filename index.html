@@ -7,11 +7,11 @@
     <meta name="theme-color" content="#F1F5F9">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="三维测距">
+    <meta name="apple-mobile-web-app-title" content="丈量">
     <link rel="icon" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="manifest" href="manifest.json">
-    <title>三维测距工具</title>
+    <title>丈量 · 三维测距</title>
     <script>
         // 提前应用已保存的配色，避免首屏闪烁
         (function () {
@@ -1061,8 +1061,8 @@
         <div class="header">
             <button class="theme-btn" id="themeBtn" onclick="cycleTheme()" title="切换配色">☀️</button>
             <div class="icon">📏</div>
-            <h1>三维测距工具</h1>
-            <p>基于经纬度 + 海拔的直线距离计算</p>
+            <h1>丈量</h1>
+            <p>三维测距 · 经纬度 + 海拔</p>
         </div>
 
         <!-- 环境警示条（默认隐藏，由脚本按打开方式显示） -->
@@ -1737,7 +1737,7 @@
                 return;
             }
             const payload = {
-                app: '三维测距工具',
+                app: '丈量',
                 version: 2,
                 exportedAt: new Date().toISOString(),
                 totalCount: d.totalCount,
@@ -1747,7 +1747,7 @@
             const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = '测距数据_' + fmtDate(new Date()) + '.json';
+            a.download = '丈量数据_' + fmtDate(new Date()) + '.json';
             document.body.appendChild(a);
             a.click();
             setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 300);
@@ -2201,7 +2201,7 @@
                 typeof b.lat === 'number' && typeof b.lon === 'number';
             const brgStr = canBrg ? fmt(bearing(a.lat, a.lon, b.lat, b.lon), 1) + '°' : '--';
             return [
-                '三维测距结果' + (rec.time ? ' · ' + fmtTime(rec.time) : ''),
+                '丈量 · 测距结果' + (rec.time ? ' · ' + fmtTime(rec.time) : ''),
                 '直线距离: ' + (su ? fmt(su.val, su.decimals) + ' ' + su.unit : '--'),
                 '地面距离: ' + (gu ? fmt(gu.val, gu.decimals) + ' ' + gu.unit : '--'),
                 '高差: ' + altStr,
@@ -2228,7 +2228,7 @@
             if (!lastResult) { showToast('请先计算距离'); return; }
             const text = formatResultText(lastResult);
             if (navigator.share) {
-                navigator.share({ title: '三维测距结果', text: text }).catch(() => { });
+                navigator.share({ title: '丈量 · 测距结果', text: text }).catch(() => { });
             } else {
                 copyText(text, '本机不支持分享，已复制到剪贴板');
             }

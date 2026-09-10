@@ -1,7 +1,7 @@
 {
-    "name": "三维测距工具",
-    "short_name": "测距",
-    "description": "基于经纬度与海拔的直线距离计算工具",
+    "name": "丈量 · 三维测距",
+    "short_name": "丈量",
+    "description": "丈量 —— 基于经纬度与海拔的三维距离测量，支持 GPS 取点与位置记录",
     "start_url": "./",
     "display": "standalone",
     "orientation": "portrait",
