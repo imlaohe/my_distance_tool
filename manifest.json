@@ -6,8 +6,26 @@
     "display": "standalone",
     "orientation": "portrait",
     "background_color": "#060b14",
-    "theme_color": "#00e5ff",
+    "theme_color": "#060b14",
     "lang": "zh-CN",
+    "categories": [
+        "utilities",
+        "navigation"
+    ],
+    "shortcuts": [
+        {
+            "name": "记录当前位置",
+            "short_name": "位置记录",
+            "description": "跳到位置记录列表",
+            "url": "./?view=places"
+        },
+        {
+            "name": "查看历史记录",
+            "short_name": "历史记录",
+            "description": "直接跳到历史记录列表",
+            "url": "./?view=history"
+        }
+    ],
     "icons": [
         {
             "src": "icon-192.png",

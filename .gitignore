@@ -1,6 +1,6 @@
-.venv/
-dist/
-build/
-*.spec
-__pycache__/
-*.pyc
+# Reasonix 工具目录
+.reasonix/
+
+# 系统文件
+Thumbs.db
+.DS_Store

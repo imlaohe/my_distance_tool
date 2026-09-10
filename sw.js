@@ -1,5 +1,5 @@
 // Service Worker - 离线缓存支持
-const CACHE_NAME = 'distance-tool-v1';
+const CACHE_NAME = 'distance-tool-v4';
 const ASSETS = [
     './',
     './index.html',
@@ -26,9 +26,39 @@ self.addEventListener('activate', (e) => {
     self.clients.claim();
 });
 
-// 请求时优先使用缓存，失败时回退网络
+// 缓存策略：
+// - 页面导航（HTML）：网络优先 —— 部署新版后刷新即可拿到最新页面，离线时回退缓存
+// - 其他静态资源（图标等）：缓存优先 —— 省流量、离线可用，首次未命中再走网络并回填缓存
 self.addEventListener('fetch', (e) => {
+    const req = e.request;
+    if (req.method !== 'GET') return;
+
+    const isHtml = req.mode === 'navigate' ||
+        (req.headers.get('accept') || '').includes('text/html');
+
+    if (isHtml) {
+        e.respondWith(
+            fetch(req)
+                .then((res) => {
+                    const copy = res.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+                    return res;
+                })
+                .catch(() =>
+                    caches.match(req).then((cached) => cached || caches.match('./index.html'))
+                )
+        );
+        return;
+    }
+
     e.respondWith(
-        caches.match(e.request).then((cached) => cached || fetch(e.request))
+        caches.match(req).then((cached) => {
+            if (cached) return cached;
+            return fetch(req).then((res) => {
+                const copy = res.clone();
+                caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+                return res;
+            });
+        })
     );
 });

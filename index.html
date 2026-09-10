@@ -3,11 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#060b14">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="三维测距">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="manifest" href="manifest.json">
     <title>三维测距工具</title>
     <style>
@@ -42,10 +44,12 @@
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding: 16px;
+            /* 全面屏适配：避开刘海、圆角与底部手势条 */
+            padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
             -webkit-tap-highlight-color: transparent;
             -webkit-font-smoothing: antialiased;
         }
@@ -113,6 +117,20 @@
             margin-top: 4px;
             letter-spacing: 1px;
             font-family: var(--font-mono);
+        }
+
+        /* ===== 环境警示条（本地文件 / HTTP 打开时提示） ===== */
+        .env-warn {
+            background: rgba(255, 179, 0, 0.12);
+            border: 1px solid rgba(255, 179, 0, 0.45);
+            color: #ffb300;
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            font-size: 11px;
+            line-height: 1.7;
+            font-family: var(--font-mono);
+            letter-spacing: 0.4px;
+            margin-bottom: 16px;
         }
 
         /* ===== 格式选择器 ===== */
@@ -246,6 +264,35 @@
             background: var(--danger);
             box-shadow: 0 0 12px var(--danger-glow);
             color: var(--danger);
+        }
+
+        /* 取当前点（GPS）按钮 */
+        .locate-btn {
+            margin-left: auto;
+            height: 26px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.25s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .locate-btn:active {
+            border-color: var(--border-bright);
+            background: rgba(0, 229, 255, 0.12);
+        }
+
+        .locate-btn:disabled {
+            opacity: 0.55;
+            cursor: default;
         }
 
         /* 输入组容器 */
@@ -522,17 +569,18 @@
 
         .result-detail {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
         }
 
         .detail-item {
             background: var(--input-bg);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 14px 10px;
+            padding: 14px 6px;
             text-align: center;
             position: relative;
+            min-width: 0;
         }
 
         .detail-item::before {
@@ -546,11 +594,14 @@
         }
 
         .detail-value {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 700;
             color: var(--text);
             font-family: var(--font-mono);
-            letter-spacing: 0.5px;
+            letter-spacing: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .detail-label {
@@ -565,7 +616,7 @@
         /* ===== Toast ===== */
         .toast {
             position: fixed;
-            top: 24px;
+            top: calc(24px + env(safe-area-inset-top));
             left: 50%;
             transform: translateX(-50%);
             background: rgba(255, 61, 113, 0.2);
@@ -588,6 +639,269 @@
 
         .toast.show {
             opacity: 1;
+        }
+
+        /* ===== 复制 / 分享按钮 ===== */
+        .result-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .copy-result-btn {
+            flex: 1;
+            min-width: 0;
+            height: 38px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text-dim);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .copy-result-btn:active {
+            color: var(--accent);
+            border-color: var(--border-bright);
+            background: rgba(0, 229, 255, 0.08);
+        }
+
+        /* ===== 统计面板 ===== */
+        .stat-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 8px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.3), transparent);
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--accent);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 6px;
+            letter-spacing: 1.5px;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+        }
+
+        /* ===== 历史记录 ===== */
+        .history-section {
+            margin-top: 24px;
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .history-title {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            font-family: var(--font-mono);
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .history-count {
+            font-size: 10px;
+            background: rgba(0, 229, 255, 0.12);
+            color: var(--accent);
+            border: 1px solid rgba(0, 229, 255, 0.25);
+            border-radius: 20px;
+            padding: 1px 8px;
+            font-family: var(--font-mono);
+        }
+
+        .history-tools {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .mini-btn {
+            height: 28px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--text-dim);
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+
+        .mini-btn:active {
+            color: var(--accent);
+            border-color: var(--border-bright);
+            background: rgba(0, 229, 255, 0.08);
+        }
+
+        .mini-btn-danger:active {
+            color: var(--danger);
+            border-color: rgba(255, 61, 113, 0.4);
+            background: rgba(255, 61, 113, 0.08);
+        }
+
+        .history-list {
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 2px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 229, 255, 0.2) transparent;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 229, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        .history-empty {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 12px;
+            font-family: var(--font-mono);
+            letter-spacing: 1px;
+            padding: 28px 0;
+            border: 1px dashed var(--border);
+            border-radius: var(--radius);
+        }
+
+        .history-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: border-color 0.3s;
+        }
+
+        .history-item:active {
+            border-color: var(--border-bright);
+        }
+
+        .history-top {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .history-dist {
+            font-size: 22px;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            color: var(--accent);
+            letter-spacing: -0.5px;
+        }
+
+        .history-dist em {
+            font-style: normal;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-dim);
+            margin-left: 3px;
+        }
+
+        .history-time {
+            font-size: 10px;
+            color: var(--text-dim);
+            font-family: var(--font-mono);
+            flex-shrink: 0;
+        }
+
+        /* 位置记录：坐标主体 */
+        .place-coord {
+            font-size: 15px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--accent);
+            letter-spacing: 0.3px;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+
+        .history-coords {
+            font-size: 10px;
+            color: var(--text-dim);
+            font-family: var(--font-mono);
+            margin: 8px 0 10px;
+            word-break: break-all;
+            line-height: 1.6;
+            opacity: 0.85;
+        }
+
+        .history-note {
+            font-size: 11px;
+            color: var(--accent3);
+            font-family: var(--font-mono);
+            margin: -4px 0 10px;
+            line-height: 1.5;
+            word-break: break-all;
+            opacity: 0.9;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .history-actions .mini-btn {
+            flex: 1;
+            height: 30px;
+            padding: 0 4px;
         }
 
         /* ===== 底部 ===== */
@@ -616,6 +930,9 @@
             <p>基于经纬度 + 海拔的直线距离计算</p>
         </div>
 
+        <!-- 环境警示条（默认隐藏，由脚本按打开方式显示） -->
+        <div class="env-warn" id="envWarn" style="display:none"></div>
+
         <!-- 格式选择器 -->
         <div class="format-selector" id="formatSelector">
             <button class="format-btn active" data-format="decimal">小数度</button>
@@ -627,6 +944,7 @@
         <div class="point-card point-a">
             <div class="point-label">
                 <span class="point-dot"></span> 点位 A
+                <button class="locate-btn" onclick="locatePoint('a', this)">📍 取当前点</button>
             </div>
 
             <!-- 小数度 -->
@@ -730,6 +1048,7 @@
         <div class="point-card point-b">
             <div class="point-label">
                 <span class="point-dot"></span> 点位 B
+                <button class="locate-btn" onclick="locatePoint('b', this)">📍 取当前点</button>
             </div>
 
             <!-- 小数度 -->
@@ -843,11 +1162,62 @@
                     <div class="detail-value" id="altDiff">--</div>
                     <div class="detail-label">高差</div>
                 </div>
+                <div class="detail-item">
+                    <div class="detail-value" id="bearingVal">--</div>
+                    <div class="detail-label">A→B 方位角</div>
+                </div>
+            </div>
+            <div class="result-actions">
+                <button class="copy-result-btn" onclick="copyResult()">⧉ 复制结果</button>
+                <button class="copy-result-btn" onclick="shareResult()">📤 分享结果</button>
             </div>
         </div>
 
+        <!-- 统计面板 -->
+        <div class="stat-panel">
+            <div class="stat-item">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">累计计算</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statToday">0</div>
+                <div class="stat-label">今日计算</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statRecent">--</div>
+                <div class="stat-label">最近一次</div>
+            </div>
+        </div>
+
+        <!-- 位置记录 -->
+        <div class="history-section" id="placeSection">
+            <div class="history-header">
+                <div class="history-title">📍 位置记录 <span class="history-count" id="placeCount">0</span></div>
+                <div class="history-tools">
+                    <button class="mini-btn" onclick="recordCurrentPlace(this)">记录当前位置</button>
+                    <button class="mini-btn mini-btn-danger" onclick="clearPlaces()">清空</button>
+                </div>
+            </div>
+            <div class="history-list" id="placeList"></div>
+        </div>
+
+        <!-- 历史记录 -->
+        <div class="history-section" id="historySection">
+            <div class="history-header">
+                <div class="history-title">📜 历史记录 <span class="history-count" id="historyCount">0</span></div>
+                <div class="history-tools">
+                    <button class="mini-btn" onclick="exportHistory()">导出</button>
+                    <button class="mini-btn" onclick="document.getElementById('importFile').click()">导入</button>
+                    <button class="mini-btn mini-btn-danger" onclick="clearHistory()">清空</button>
+                </div>
+                <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+            </div>
+            <div class="history-list" id="historyList"></div>
+        </div>
+
         <div class="footer-note">
-            EARTH RADIUS 6371 km &nbsp;·&nbsp; HAVERSINE + 3D PYTHAGOREAN
+            EARTH RADIUS 6371 km &nbsp;·&nbsp; HAVERSINE + 3D PYTHAGOREAN<br>
+            支持粘贴坐标串 &nbsp;·&nbsp; GPS 取点 / 记录位置
         </div>
     </div>
 
@@ -862,22 +1232,38 @@
 
         /* ====== 格式切换 ====== */
 
-        document.getElementById('formatSelector').addEventListener('click', (e) => {
-            const btn = e.target.closest('.format-btn');
-            if (!btn) return;
-            const fmt = btn.dataset.format;
+        function setFormat(fmt) {
+            if (fmt === currentFormat) return;
+
+            // 切换前：以当前格式已填的坐标为准，自动换算并填入目标格式的输入框
+            document.querySelectorAll('.point-card').forEach(card => {
+                const coords = getPointCoords(card);
+                if (hasPointCoords(card) &&
+                    typeof coords.lat === 'number' && isFinite(coords.lat) &&
+                    typeof coords.lon === 'number' && isFinite(coords.lon)) {
+                    fillPointCoords(card, coords, fmt);
+                }
+            });
+
+            currentFormat = fmt;
 
             // 更新按钮激活状态
-            document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentFormat = fmt;
+            document.querySelectorAll('.format-btn').forEach(b => b.classList.toggle('active', b.dataset.format === fmt));
 
             // 更新所有点位卡片中的输入区域
             document.querySelectorAll('.format-inputs').forEach(el => {
                 el.classList.toggle('active', el.dataset.format === fmt);
             });
 
+            // 刷新各格式预览文本
+            updatePreviews();
+        }
+
+        document.getElementById('formatSelector').addEventListener('click', (e) => {
+            const btn = e.target.closest('.format-btn');
+            if (!btn) return;
             // 切换时不清空已填数据，方便对比
+            setFormat(btn.dataset.format);
         });
 
         /* ====== 工具函数 ====== */
@@ -892,9 +1278,22 @@
             return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
 
-        function showToast(msg) {
+        // A→B 方位角：0° 为正北，顺时针增大
+        function bearing(lat1, lon1, lat2, lon2) {
+            const la1 = toRad(lat1), la2 = toRad(lat2);
+            const dLon = toRad(lon2 - lon1);
+            const y = Math.sin(dLon) * Math.cos(la2);
+            const x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(dLon);
+            return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+        }
+
+        function showToast(msg, ok) {
             const t = document.getElementById('toast');
             t.textContent = msg;
+            t.style.borderColor = ok ? 'rgba(0, 230, 118, 0.4)' : 'rgba(255, 61, 113, 0.4)';
+            t.style.background = ok ? 'rgba(0, 230, 118, 0.15)' : 'rgba(255, 61, 113, 0.2)';
+            t.style.color = ok ? 'var(--accent3)' : 'var(--danger)';
+            t.style.boxShadow = ok ? '0 4px 24px rgba(0, 230, 118, 0.25)' : '0 4px 24px var(--danger-glow)';
             t.classList.add('show');
             clearTimeout(t._timeout);
             t._timeout = setTimeout(() => t.classList.remove('show'), 2500);
@@ -910,13 +1309,16 @@
 
         /* ====== DMS / DDM → 小数度 ====== */
 
+        // 全部为空时返回 NaN（避免空输入被当作 0° 参与计算）
         function dmsToDecimal(d, m, s, dir) {
+            if (![d, m, s].some(v => String(v).trim() !== '')) return NaN;
             let dec = (parseFloat(d) || 0) + (parseFloat(m) || 0) / 60 + (parseFloat(s) || 0) / 3600;
             if (dir === 'S' || dir === 'W') dec = -dec;
             return dec;
         }
 
         function ddmToDecimal(d, m, dir) {
+            if (![d, m].some(v => String(v).trim() !== '')) return NaN;
             let dec = (parseFloat(d) || 0) + (parseFloat(m) || 0) / 60;
             if (dir === 'S' || dir === 'W') dec = -dec;
             return dec;
@@ -960,6 +1362,23 @@
 
         function getPointAlt(point) {
             return parseFloat(point.querySelector('.alt-input').value);
+        }
+
+        // 判断当前格式下该卡片是否有真实的坐标输入（任一输入框非空）
+        function hasPointCoords(card) {
+            const filled = sel => card.querySelector(sel).value.trim() !== '';
+            if (currentFormat === 'decimal') {
+                return filled('.lat-dec') && filled('.lon-dec');
+            }
+            if (currentFormat === 'dms') {
+                return (filled('.lat-d') || filled('.lat-m') || filled('.lat-s')) &&
+                       (filled('.lon-d') || filled('.lon-m') || filled('.lon-s'));
+            }
+            if (currentFormat === 'ddm') {
+                return (filled('.lat-d') || filled('.lat-m')) &&
+                       (filled('.lon-d') || filled('.lon-m'));
+            }
+            return false;
         }
 
         /* ====== 校验 ====== */
@@ -1032,29 +1451,14 @@
         function updatePreviews() {
             document.querySelectorAll('.point-card').forEach(card => {
                 const coords = getPointCoords(card);
-                // 更新 DMS 预览
-                card.querySelectorAll('.format-inputs[data-format="dms"] .lat-preview').forEach(el => {
-                    if (!isNaN(coords.lat)) {
-                        const d = decimalToDMS(coords.lat, true);
-                        el.textContent = `→ 小数：${fmt(coords.lat, 6)}°`;
-                    } else el.textContent = '';
-                });
-                card.querySelectorAll('.format-inputs[data-format="dms"] .lon-preview').forEach(el => {
-                    if (!isNaN(coords.lon)) {
-                        const d = decimalToDMS(coords.lon, false);
-                        el.textContent = `→ 小数：${fmt(coords.lon, 6)}°`;
-                    } else el.textContent = '';
-                });
-                // 更新 DDM 预览
-                card.querySelectorAll('.format-inputs[data-format="ddm"] .lat-preview').forEach(el => {
-                    if (!isNaN(coords.lat))
-                        el.textContent = `→ 小数：${fmt(coords.lat, 6)}°`;
-                    else el.textContent = '';
-                });
-                card.querySelectorAll('.format-inputs[data-format="ddm"] .lon-preview').forEach(el => {
-                    if (!isNaN(coords.lon))
-                        el.textContent = `→ 小数：${fmt(coords.lon, 6)}°`;
-                    else el.textContent = '';
+                // DMS / DDM 两个区域都是"当前输入 → 小数度"的预览，逻辑一致
+                ['dms', 'ddm'].forEach(name => {
+                    const box = card.querySelector(`.format-inputs[data-format="${name}"]`);
+                    if (!box) return;
+                    const latEl = box.querySelector('.lat-preview');
+                    const lonEl = box.querySelector('.lon-preview');
+                    if (latEl) latEl.textContent = isNaN(coords.lat) ? '' : `→ 小数：${fmt(coords.lat, 6)}°`;
+                    if (lonEl) lonEl.textContent = isNaN(coords.lon) ? '' : `→ 小数：${fmt(coords.lon, 6)}°`;
                 });
             });
         }
@@ -1068,6 +1472,8 @@
         });
 
         /* ====== 计算 ====== */
+
+        let lastResult = null;
 
         function calculate() {
             const { errors, coordsA, coordsB, altA, altB } = validateInputs();
@@ -1089,15 +1495,687 @@
 
             const ad = Math.abs(altB - altA);
             document.getElementById('altDiff').textContent = ad >= 1000 ? fmt(ad / 1000, 2) + ' km' : fmt(ad, 1) + ' m';
+
+            const brg = bearing(coordsA.lat, coordsA.lon, coordsB.lat, coordsB.lon);
+            document.getElementById('bearingVal').textContent = fmt(brg, 1) + '°';
+
+            // 保存本次结果供复制使用，并自动记入历史
+            const rec = makeRecord(coordsA, coordsB, altA, altB, straightKm, groundKm);
+            lastResult = rec;
+            addRecord(rec);
+            renderHistory();
+            renderStats();
+
+            // 小屏手机上自动滚到结果，避免手动翻找
+            setTimeout(() => resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
         }
 
         /* ====== 清空 ====== */
 
         function clearAll() {
+            const hasInput = Array.from(document.querySelectorAll('.point-card input'))
+                .some(input => input.value.trim() !== '');
+            if (hasInput && !confirm('确定清空已填写的坐标与海拔吗？')) return;
             document.querySelectorAll('.point-card input').forEach(input => { input.value = ''; });
             document.querySelectorAll('.point-card select').forEach(sel => { sel.selectedIndex = 0; });
             document.getElementById('result').classList.remove('show');
+            updatePreviews();
         }
+
+        /* ====== 历史记录（localStorage 持久化） ====== */
+
+        const STORE_KEY = 'rangingData_v1';
+        const MAX_HISTORY = 100;
+
+        function loadData() {
+            try {
+                const raw = localStorage.getItem(STORE_KEY);
+                if (!raw) return { totalCount: 0, history: [] };
+                const d = JSON.parse(raw);
+                return {
+                    totalCount: Number(d.totalCount) || 0,
+                    history: Array.isArray(d.history) ? d.history : [],
+                };
+            } catch (e) {
+                return { totalCount: 0, history: [] };
+            }
+        }
+
+        function saveData(d) {
+            try {
+                localStorage.setItem(STORE_KEY, JSON.stringify(d));
+            } catch (e) {
+                showToast('存储失败：' + (e && e.message ? e.message : '存储空间不足'));
+            }
+        }
+
+        function makeRecord(coordsA, coordsB, altA, altB, straightKm, groundKm) {
+            return {
+                id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+                time: Date.now(),
+                format: currentFormat,
+                a: { lat: coordsA.lat, lon: coordsA.lon, alt: altA },
+                b: { lat: coordsB.lat, lon: coordsB.lon, alt: altB },
+                straightKm: straightKm,
+                groundKm: groundKm,
+                altDiffM: altB - altA,
+            };
+        }
+
+        function addRecord(rec) {
+            const d = loadData();
+            d.totalCount += 1;
+            d.history.unshift(rec);
+            if (d.history.length > MAX_HISTORY) d.history.length = MAX_HISTORY;
+            saveData(d);
+        }
+
+        function deleteRecord(id) {
+            const d = loadData();
+            const before = d.history.length;
+            d.history = d.history.filter(r => r.id !== id);
+            if (d.history.length === before) return;
+            saveData(d);
+            renderHistory();
+            renderStats();
+            showToast('已删除该记录', true);
+        }
+
+        function clearHistory() {
+            const d = loadData();
+            if (d.history.length === 0) { showToast('暂无历史记录'); return; }
+            if (!confirm('确定要清空全部 ' + d.history.length + ' 条历史记录吗？')) return;
+            d.history = [];
+            saveData(d);
+            renderHistory();
+            renderStats();
+            showToast('已清空历史记录', true);
+        }
+
+        /* ====== 导出 / 导入 ====== */
+
+        function exportHistory() {
+            const d = loadData();
+            const pd = loadPlaces();
+            if (d.history.length === 0 && pd.places.length === 0) {
+                showToast('暂无可导出的记录');
+                return;
+            }
+            const payload = {
+                app: '三维测距工具',
+                version: 2,
+                exportedAt: new Date().toISOString(),
+                totalCount: d.totalCount,
+                history: d.history,
+                places: pd.places,
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '测距数据_' + fmtDate(new Date()) + '.json';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 300);
+            showToast('已导出 ' + d.history.length + ' 条历史、' + pd.places.length + ' 条位置', true);
+        }
+
+        function importHistory(e) {
+            const file = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const data = JSON.parse(reader.result);
+                    const histList = Array.isArray(data) ? data : (Array.isArray(data.history) ? data.history : []);
+                    const placeList = (!Array.isArray(data) && Array.isArray(data.places)) ? data.places : [];
+                    if (histList.length === 0 && placeList.length === 0) {
+                        showToast('导入失败：文件里没有记录');
+                        return;
+                    }
+
+                    // 历史记录：按 id 去重合并
+                    const d = loadData();
+                    const seen = new Set(d.history.map(r => r.id));
+                    let addedH = 0;
+                    for (const r of histList) {
+                        // 只接受结构合法、id 仅含安全字符的记录
+                        if (r && typeof r.id === 'string' && /^[A-Za-z0-9_-]+$/.test(r.id) &&
+                            typeof r.straightKm === 'number' && !seen.has(r.id)) {
+                            d.history.push(r);
+                            seen.add(r.id);
+                            addedH++;
+                        }
+                    }
+                    d.history.sort((x, y) => (y.time || 0) - (x.time || 0));
+                    if (d.history.length > MAX_HISTORY) d.history.length = MAX_HISTORY;
+                    saveData(d);
+
+                    // 位置记录：同样按 id 去重合并
+                    const pd = loadPlaces();
+                    const seenP = new Set(pd.places.map(p => p.id));
+                    let addedP = 0;
+                    for (const p of placeList) {
+                        if (p && typeof p.id === 'string' && /^[A-Za-z0-9_-]+$/.test(p.id) &&
+                            typeof p.lat === 'number' && typeof p.lon === 'number' && !seenP.has(p.id)) {
+                            pd.places.push(p);
+                            seenP.add(p.id);
+                            addedP++;
+                        }
+                    }
+                    pd.places.sort((x, y) => (y.time || 0) - (x.time || 0));
+                    if (pd.places.length > MAX_PLACES) pd.places.length = MAX_PLACES;
+                    savePlaces(pd);
+
+                    renderHistory();
+                    renderStats();
+                    renderPlaces();
+                    showToast(addedH + addedP > 0
+                        ? ('导入成功：新增 ' + addedH + ' 条历史、' + addedP + ' 条位置')
+                        : '没有新记录可导入', true);
+                } catch (err) {
+                    showToast('导入失败：' + (err && err.message ? err.message : '文件解析错误'));
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        /* ====== 渲染 ====== */
+
+        const FORMAT_NAMES = { decimal: '小数度', dms: '度分秒', ddm: '度·分' };
+
+        function fmtTime(ts) {
+            if (!ts) return '--';
+            const d = new Date(ts);
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+            if (d.toDateString() === now.toDateString()) return '今天 ' + hm;
+            if (d.getFullYear() === now.getFullYear()) return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + hm;
+            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + hm;
+        }
+
+        function fmtDate(d) {
+            const pad = n => String(n).padStart(2, '0');
+            return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
+        }
+
+        function renderHistory() {
+            const d = loadData();
+            const listEl = document.getElementById('historyList');
+            document.getElementById('historyCount').textContent = d.history.length;
+
+            if (d.history.length === 0) {
+                listEl.innerHTML = '<div class="history-empty">暂无历史记录<br>计算结果将自动保存到这里</div>';
+                return;
+            }
+
+            listEl.innerHTML = d.history.map(r => {
+                const su = (typeof r.straightKm === 'number' && isFinite(r.straightKm)) ? smartUnit(r.straightKm) : null;
+                const a = r.a || {}, b = r.b || {};
+                const latA = typeof a.lat === 'number' ? fmt(a.lat, 4) : '--';
+                const lonA = typeof a.lon === 'number' ? fmt(a.lon, 4) : '--';
+                const latB = typeof b.lat === 'number' ? fmt(b.lat, 4) : '--';
+                const lonB = typeof b.lon === 'number' ? fmt(b.lon, 4) : '--';
+                const distHtml = su ? fmt(su.val, su.decimals) + '<em>' + su.unit + '</em>' : '<em>--</em>';
+                const coords = 'A ' + latA + '°, ' + lonA + '° → B ' + latB + '°, ' + lonB + '°';
+                const fmtName = FORMAT_NAMES[r.format] ? ' · ' + FORMAT_NAMES[r.format] : '';
+                const noteHtml = r.note ? '<div class="history-note">📝 ' + escapeHtml(r.note) + '</div>' : '';
+                // 只保留安全字符，避免导入数据里的 id 破坏 onclick 属性
+                const sid = String(r.id).replace(/[^A-Za-z0-9_-]/g, '');
+                return '<div class="history-item">'
+                    + '<div class="history-top">'
+                    + '<span class="history-dist">' + distHtml + '</span>'
+                    + '<span class="history-time">' + fmtTime(r.time) + '</span>'
+                    + '</div>'
+                    + '<div class="history-coords">' + coords + fmtName + '</div>'
+                    + noteHtml
+                    + '<div class="history-actions">'
+                    + '<button class="mini-btn" onclick="restoreRecord(\'' + sid + '\')">↩ 回填</button>'
+                    + '<button class="mini-btn" onclick="copyRecord(\'' + sid + '\')">⧉ 复制</button>'
+                    + '<button class="mini-btn" onclick="editNote(\'' + sid + '\')">✏️ 备注</button>'
+                    + '<button class="mini-btn mini-btn-danger" onclick="deleteRecord(\'' + sid + '\')">✕ 删除</button>'
+                    + '</div>'
+                    + '</div>';
+            }).join('');
+        }
+
+        function renderStats() {
+            const d = loadData();
+            document.getElementById('statTotal').textContent = d.totalCount;
+            const today = new Date().toDateString();
+            const todayCount = d.history.filter(r => r.time && new Date(r.time).toDateString() === today).length;
+            document.getElementById('statToday').textContent = todayCount;
+            const recent = d.history[0];
+            if (recent && typeof recent.straightKm === 'number' && isFinite(recent.straightKm)) {
+                const su = smartUnit(recent.straightKm);
+                document.getElementById('statRecent').textContent = fmt(su.val, su.decimals) + su.unit;
+            } else {
+                document.getElementById('statRecent').textContent = '--';
+            }
+        }
+
+        /* ====== 位置记录（按时间保存当前位置，事后可填入） ====== */
+
+        const PLACE_KEY = 'rangingPlaces_v1';
+        const MAX_PLACES = 200;
+
+        function loadPlaces() {
+            try {
+                const raw = localStorage.getItem(PLACE_KEY);
+                if (!raw) return { places: [] };
+                const d = JSON.parse(raw);
+                return { places: Array.isArray(d.places) ? d.places : [] };
+            } catch (e) {
+                return { places: [] };
+            }
+        }
+
+        function savePlaces(d) {
+            try {
+                localStorage.setItem(PLACE_KEY, JSON.stringify(d));
+            } catch (e) {
+                showToast('存储失败：' + (e && e.message ? e.message : '存储空间不足'));
+            }
+        }
+
+        function addPlace(place) {
+            const d = loadPlaces();
+            d.places.unshift(place);
+            if (d.places.length > MAX_PLACES) d.places.length = MAX_PLACES;
+            savePlaces(d);
+        }
+
+        function findPlace(id) {
+            return loadPlaces().places.find(p => p.id === id);
+        }
+
+        function deletePlace(id) {
+            const d = loadPlaces();
+            const before = d.places.length;
+            d.places = d.places.filter(p => p.id !== id);
+            if (d.places.length === before) return;
+            savePlaces(d);
+            renderPlaces();
+            showToast('已删除该位置记录', true);
+        }
+
+        function clearPlaces() {
+            const d = loadPlaces();
+            if (d.places.length === 0) { showToast('暂无位置记录'); return; }
+            if (!confirm('确定要清空全部 ' + d.places.length + ' 条位置记录吗？')) return;
+            d.places = [];
+            savePlaces(d);
+            renderPlaces();
+            showToast('已清空位置记录', true);
+        }
+
+        // 把某条位置记录填入点位 A / B
+        function fillPlaceInto(id, which) {
+            const p = findPlace(id);
+            if (!p) return;
+            const card = document.querySelector(which === 'a' ? '.point-a' : '.point-b');
+            if (!card) return;
+            fillPointCoords(card, { lat: p.lat, lon: p.lon }, currentFormat);
+            if (typeof p.alt === 'number' && isFinite(p.alt)) {
+                card.querySelector('.alt-input').value = p.alt;
+            }
+            updatePreviews();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast('已填入点位 ' + which.toUpperCase() + '（' + fmtTime(p.time) + '）', true);
+        }
+
+        function editPlaceNote(id) {
+            const d = loadPlaces();
+            const p = d.places.find(x => x.id === id);
+            if (!p) return;
+            const v = prompt('给这个位置加个备注（留空则删除备注）：', p.note || '');
+            if (v === null) return;
+            const note = v.trim().slice(0, 40);
+            if (note) p.note = note; else delete p.note;
+            savePlaces(d);
+            renderPlaces();
+            showToast(note ? '备注已保存' : '备注已清除', true);
+        }
+
+        function renderPlaces() {
+            const d = loadPlaces();
+            const listEl = document.getElementById('placeList');
+            document.getElementById('placeCount').textContent = d.places.length;
+
+            if (d.places.length === 0) {
+                listEl.innerHTML = '<div class="history-empty">暂无位置记录<br>点「记录当前位置」用 GPS 按时间保存坐标</div>';
+                return;
+            }
+
+            listEl.innerHTML = d.places.map(p => {
+                const latOk = typeof p.lat === 'number' && isFinite(p.lat);
+                const lonOk = typeof p.lon === 'number' && isFinite(p.lon);
+                const coord = (latOk ? fmt(p.lat, 5) : '--') + ', ' + (lonOk ? fmt(p.lon, 5) : '--');
+                const meta = [fmtTime(p.time)];
+                if (typeof p.alt === 'number' && isFinite(p.alt)) meta.push('海拔 ' + p.alt + ' m');
+                if (typeof p.acc === 'number' && isFinite(p.acc)) meta.push('精度 ±' + p.acc + ' m');
+                const noteHtml = p.note ? '<div class="history-note">📝 ' + escapeHtml(p.note) + '</div>' : '';
+                const sid = String(p.id).replace(/[^A-Za-z0-9_-]/g, '');
+                return '<div class="history-item">'
+                    + '<div class="place-coord">' + coord + '</div>'
+                    + '<div class="history-coords">' + meta.join(' · ') + '</div>'
+                    + noteHtml
+                    + '<div class="history-actions">'
+                    + '<button class="mini-btn" onclick="fillPlaceInto(\'' + sid + '\', \'a\')">填入A</button>'
+                    + '<button class="mini-btn" onclick="fillPlaceInto(\'' + sid + '\', \'b\')">填入B</button>'
+                    + '<button class="mini-btn" onclick="editPlaceNote(\'' + sid + '\')">✏️</button>'
+                    + '<button class="mini-btn mini-btn-danger" onclick="deletePlace(\'' + sid + '\')">✕</button>'
+                    + '</div>'
+                    + '</div>';
+            }).join('');
+        }
+
+        /* ====== 一键回填 ====== */
+
+        function trimNum(v) { return Math.round(v * 1e6) / 1e6; }
+
+        function round1(v) { return Math.round(v * 10) / 10; }
+
+        function decimalToDDM(dec, isLat) {
+            const sign = dec < 0 ? -1 : 1;
+            const abs = Math.abs(dec);
+            const d = Math.floor(abs);
+            const m = (abs - d) * 60;
+            const dir = isLat ? (sign < 0 ? 'S' : 'N') : (sign < 0 ? 'W' : 'E');
+            return { d, m, dir };
+        }
+
+        function fillPoint(card, p) {
+            if (!p) return;
+            card.querySelector('.alt-input').value = (p.alt != null && !isNaN(p.alt)) ? p.alt : '';
+            fillPointCoords(card, { lat: p.lat, lon: p.lon }, currentFormat);
+        }
+
+        // 把坐标换算后填入指定格式的输入框（不动海拔，海拔三种格式共用）
+        function fillPointCoords(card, coords, fmt) {
+            const latOk = typeof coords.lat === 'number' && isFinite(coords.lat);
+            const lonOk = typeof coords.lon === 'number' && isFinite(coords.lon);
+            if (fmt === 'decimal') {
+                card.querySelector('.lat-dec').value = latOk ? coords.lat : '';
+                card.querySelector('.lon-dec').value = lonOk ? coords.lon : '';
+            } else if (fmt === 'dms') {
+                const la = decimalToDMS(latOk ? coords.lat : 0, true);
+                const lo = decimalToDMS(lonOk ? coords.lon : 0, false);
+                card.querySelector('.lat-d').value = latOk ? la.d : '';
+                card.querySelector('.lat-m').value = latOk ? la.m : '';
+                card.querySelector('.lat-s').value = latOk ? trimNum(la.s) : '';
+                card.querySelector('.lat-dir').value = latOk ? la.dir : 'N';
+                card.querySelector('.lon-d').value = lonOk ? lo.d : '';
+                card.querySelector('.lon-m').value = lonOk ? lo.m : '';
+                card.querySelector('.lon-s').value = lonOk ? trimNum(lo.s) : '';
+                card.querySelector('.lon-dir').value = lonOk ? lo.dir : 'E';
+            } else if (fmt === 'ddm') {
+                const la = decimalToDDM(latOk ? coords.lat : 0, true);
+                const lo = decimalToDDM(lonOk ? coords.lon : 0, false);
+                card.querySelector('.lat-d').value = latOk ? la.d : '';
+                card.querySelector('.lat-m').value = latOk ? trimNum(la.m) : '';
+                card.querySelector('.lat-dir').value = latOk ? la.dir : 'N';
+                card.querySelector('.lon-d').value = lonOk ? lo.d : '';
+                card.querySelector('.lon-m').value = lonOk ? trimNum(lo.m) : '';
+                card.querySelector('.lon-dir').value = lonOk ? lo.dir : 'E';
+            }
+        }
+
+        function restoreRecord(id) {
+            const d = loadData();
+            const rec = d.history.find(r => r.id === id);
+            if (!rec) return;
+            setFormat(rec.format && FORMAT_NAMES[rec.format] ? rec.format : 'decimal');
+            fillPoint(document.querySelector('.point-a'), rec.a);
+            fillPoint(document.querySelector('.point-b'), rec.b);
+            updatePreviews();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast('已回填，可点击「计算距离」复查', true);
+        }
+
+        /* ====== GPS 定位（取点 / 记录位置共用） ====== */
+
+        function geoErrMsg(err) {
+            const msgs = {
+                1: '定位被拒绝：请在浏览器/系统设置里允许获取位置',
+                2: '无法获取位置：请确认已开启 GPS 与网络后重试',
+                3: '定位超时：请到空旷处或开启 GPS 后重试',
+            };
+            return msgs[err && err.code] || '定位失败，请重试';
+        }
+
+        // 判断当前是否属于"浏览器禁止定位"的打开方式，返回原因文案（正常返回空串）
+        function geoBlockReason() {
+            const proto = location.protocol;
+            if (proto === 'file:' || proto === 'content:') {
+                return '本地文件方式无法定位：请把页面放到 https:// 网址上再打开';
+            }
+            if (!window.isSecureContext) {
+                return 'HTTP 页面被浏览器禁止定位：请改用 https:// 网址访问';
+            }
+            return '';
+        }
+
+        // 共用流程：按钮置忙 → 定位成功回调 / 失败提示 → 恢复按钮
+        function withGeolocation(btn, onSuccess) {
+            if (!navigator.geolocation) {
+                showToast('当前浏览器不支持定位');
+                return;
+            }
+            const blocked = geoBlockReason();
+            if (blocked) {
+                showToast(blocked);
+                return;
+            }
+            const original = btn ? btn.textContent : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '定位中…';
+            }
+            const restore = () => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = original;
+                }
+            };
+
+            navigator.geolocation.getCurrentPosition((pos) => {
+                try {
+                    onSuccess(pos.coords);
+                } catch (e) {
+                    showToast('处理定位结果失败');
+                }
+                restore();
+            }, (err) => {
+                restore();
+                showToast(geoErrMsg(err));
+            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+        }
+
+        // 取当前点：直接填入输入框（不保存）
+        function locatePoint(which, btn) {
+            const card = document.querySelector(which === 'a' ? '.point-a' : '.point-b');
+            if (!card) return;
+            withGeolocation(btn, (c) => {
+                fillPointCoords(card, { lat: c.latitude, lon: c.longitude }, currentFormat);
+                // 有海拔才覆盖，避免把用户已填的海拔清空
+                if (c.altitude != null && isFinite(c.altitude)) {
+                    card.querySelector('.alt-input').value = round1(c.altitude);
+                }
+                updatePreviews();
+                const acc = isFinite(c.accuracy) ? Math.round(c.accuracy) : null;
+                const hasAlt = c.altitude != null && isFinite(c.altitude);
+                showToast('已取点（' + (acc != null ? '精度约 ' + acc + ' 米' : '无精度信息') +
+                    (hasAlt ? '，含海拔' : '，本机未提供海拔') + '）', true);
+            });
+        }
+
+        // 记录当前位置：带时间保存到「位置记录」，事后可填入 A/B
+        function recordCurrentPlace(btn) {
+            withGeolocation(btn, (c) => {
+                const place = {
+                    id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+                    time: Date.now(),
+                    lat: c.latitude,
+                    lon: c.longitude,
+                    alt: (c.altitude != null && isFinite(c.altitude)) ? round1(c.altitude) : null,
+                    acc: isFinite(c.accuracy) ? Math.round(c.accuracy) : null,
+                };
+                addPlace(place);
+                renderPlaces();
+                showToast('已记录位置（' + (place.acc != null ? '精度约 ' + place.acc + ' 米' : '已保存') + '）', true);
+            });
+        }
+
+        /* ====== 复制 ====== */
+
+        function fallbackCopy(text, done) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); done(); }
+            catch (e) { showToast('复制失败：请手动复制'); }
+            ta.remove();
+        }
+
+        function copyText(text, okMsg) {
+            const done = () => showToast(okMsg || '已复制到剪贴板', true);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+            } else {
+                fallbackCopy(text, done);
+            }
+        }
+
+        function formatResultText(rec) {
+            if (!rec) return '';
+            const su = (typeof rec.straightKm === 'number' && isFinite(rec.straightKm)) ? smartUnit(rec.straightKm) : null;
+            const gu = (typeof rec.groundKm === 'number' && isFinite(rec.groundKm)) ? smartUnit(rec.groundKm) : null;
+            const ad = Math.abs(rec.altDiffM);
+            const altStr = isFinite(ad) ? (ad >= 1000 ? fmt(ad / 1000, 2) + ' km' : fmt(ad, 1) + ' m') : '--';
+            const a = rec.a || {}, b = rec.b || {};
+            const latA = typeof a.lat === 'number' ? fmt(a.lat, 6) : '--';
+            const lonA = typeof a.lon === 'number' ? fmt(a.lon, 6) : '--';
+            const latB = typeof b.lat === 'number' ? fmt(b.lat, 6) : '--';
+            const lonB = typeof b.lon === 'number' ? fmt(b.lon, 6) : '--';
+            const canBrg = typeof a.lat === 'number' && typeof a.lon === 'number' &&
+                typeof b.lat === 'number' && typeof b.lon === 'number';
+            const brgStr = canBrg ? fmt(bearing(a.lat, a.lon, b.lat, b.lon), 1) + '°' : '--';
+            return [
+                '三维测距结果' + (rec.time ? ' · ' + fmtTime(rec.time) : ''),
+                '直线距离: ' + (su ? fmt(su.val, su.decimals) + ' ' + su.unit : '--'),
+                '地面距离: ' + (gu ? fmt(gu.val, gu.decimals) + ' ' + gu.unit : '--'),
+                '高差: ' + altStr,
+                'A→B 方位角: ' + brgStr,
+                'A: ' + latA + '°, ' + lonA + '° (海拔 ' + (a.alt != null ? a.alt : '--') + ' m)',
+                'B: ' + latB + '°, ' + lonB + '° (海拔 ' + (b.alt != null ? b.alt : '--') + ' m)',
+            ].join('\n');
+        }
+
+        function copyResult() {
+            if (!lastResult) { showToast('请先计算距离'); return; }
+            copyText(formatResultText(lastResult));
+        }
+
+        function copyRecord(id) {
+            const d = loadData();
+            const rec = d.history.find(r => r.id === id);
+            if (!rec) return;
+            copyText(formatResultText(rec));
+        }
+
+        // 调用系统分享面板，不支持时退回复制
+        function shareResult() {
+            if (!lastResult) { showToast('请先计算距离'); return; }
+            const text = formatResultText(lastResult);
+            if (navigator.share) {
+                navigator.share({ title: '三维测距结果', text: text }).catch(() => { });
+            } else {
+                copyText(text, '本机不支持分享，已复制到剪贴板');
+            }
+        }
+
+        /* ====== 历史记录备注 ====== */
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+            }[c]));
+        }
+
+        function editNote(id) {
+            const d = loadData();
+            const rec = d.history.find(r => r.id === id);
+            if (!rec) return;
+            const v = prompt('给这条记录加个备注（留空则删除备注）：', rec.note || '');
+            if (v === null) return;
+            const note = v.trim().slice(0, 40);
+            if (note) rec.note = note; else delete rec.note;
+            saveData(d);
+            renderHistory();
+            showToast(note ? '备注已保存' : '备注已清除', true);
+        }
+
+        /* ====== 粘贴解析坐标 ====== */
+
+        // 从任意文本解析出一对经纬度：支持 小数度 / 度分秒 / 度·分 / 带方向字母 / "经度在前"的写法
+        function parseCoordText(text) {
+            if (!text) return null;
+            const t = String(text).trim().replace(/[ \t\r\n]+/g, ' ');
+
+            // 1) 带方向字母的度分秒/度分，例如 39°54'15.1"N 116°24'26.6"E
+            const re = /([0-9]+(?:[.][0-9]+)?)[ ]*[°º][ ]*(?:([0-9]+(?:[.][0-9]+)?)[ ]*['′’][ ]*)?(?:([0-9]+(?:[.][0-9]+)?)[ ]*["″”][ ]*)?[ ]*([NSEWnsew])/g;
+            const hits = [];
+            let m;
+            while ((m = re.exec(t)) !== null) {
+                let dec = (parseFloat(m[1]) || 0) + (parseFloat(m[2]) || 0) / 60 + (parseFloat(m[3]) || 0) / 3600;
+                const dir = m[4].toUpperCase();
+                if (dir === 'S' || dir === 'W') dec = -dec;
+                hits.push({ dir: dir, dec: dec });
+                if (hits.length >= 2) break;
+            }
+            if (hits.length >= 2) {
+                const latHit = hits.find(h => h.dir === 'N' || h.dir === 'S');
+                const lonHit = hits.find(h => h.dir === 'E' || h.dir === 'W');
+                if (latHit && lonHit) return { lat: latHit.dec, lon: lonHit.dec };
+                return { lat: hits[0].dec, lon: hits[1].dec };
+            }
+
+            // 2) 纯数字对，例如 39.9042, 116.4074
+            const nums = t.match(/-?[0-9]+(?:[.][0-9]+)?/g);
+            if (!nums || nums.length < 2) return null;
+            let lat = parseFloat(nums[0]);
+            let lon = parseFloat(nums[1]);
+            // 兼容"经度在前"的写法：纬度不可能超过 90°
+            if (Math.abs(lat) > 90 && Math.abs(lon) <= 90) {
+                const tmp = lat;
+                lat = lon;
+                lon = tmp;
+            }
+            if (!isFinite(lat) || !isFinite(lon)) return null;
+            if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+            return { lat: lat, lon: lon };
+        }
+
+        // 在坐标输入框里粘贴整串坐标时自动拆分填入
+        document.querySelectorAll('.point-card input:not(.alt-input)').forEach(input => {
+            input.addEventListener('paste', (e) => {
+                const cb = e.clipboardData || window.clipboardData;
+                const text = cb ? cb.getData('text') : '';
+                const parsed = parseCoordText(text);
+                if (!parsed) return; // 认不出来就按普通粘贴处理
+                e.preventDefault();
+                const card = input.closest('.point-card');
+                if (!card) return;
+                fillPointCoords(card, parsed, currentFormat);
+                updatePreviews();
+                showToast('已识别坐标并填入', true);
+            });
+        });
 
         /* ====== 回车触发 ====== */
 
@@ -1106,6 +2184,46 @@
                 if (e.key === 'Enter') { e.preventDefault(); calculate(); }
             });
         });
+
+        /* ====== 初始化 ====== */
+
+        document.getElementById('importFile').addEventListener('change', importHistory);
+        renderHistory();
+        renderStats();
+        renderPlaces();
+
+        // 环境提醒：本地文件 / HTTP 打开时，定位与数据保存都会受限
+        (function checkEnv() {
+            const el = document.getElementById('envWarn');
+            if (!el) return;
+            const reason = geoBlockReason();
+            if (!reason) {
+                el.style.display = 'none';
+                return;
+            }
+            const proto = location.protocol;
+            let msg = '⚠️ ' + reason;
+            if (proto === 'file:' || proto === 'content:') {
+                msg += '<br>另外：本地文件方式下「历史记录 / 位置记录」可能无法保存，也无法安装到桌面。';
+                msg += '<br>建议部署到 https:// 网址（如 Vercel / GitHub Pages）后从浏览器打开。';
+            } else {
+                msg += '<br>可临时用 https 隧道（如 cloudflared / ngrok）在手机上访问。';
+            }
+            el.innerHTML = msg;
+            el.style.display = 'block';
+        })();
+
+        // 配合 manifest 的 shortcuts：长按桌面图标可直接跳到对应区块
+        const viewTarget = {
+            history: 'historySection',
+            places: 'placeSection',
+        }[new URLSearchParams(location.search).get('view')];
+        if (viewTarget) {
+            setTimeout(() => {
+                const el = document.getElementById(viewTarget);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+        }
 
     </script>
 </body>
